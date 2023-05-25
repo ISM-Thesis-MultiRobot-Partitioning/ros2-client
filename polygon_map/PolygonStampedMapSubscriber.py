@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
-from typing import Dict, List
+from typing import Dict
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PolygonStamped
 from tf2_ros import Buffer, TransformListener
 
+import requests
+from datetime import datetime
+import json
+
 
 class PolygonStampedMapSubscriber(Node):
 
-    def __init__(self, channel):
+    def __init__(self, channel: str, api_url: str):
         super().__init__('polygon_stamped_map_subscriber')
 
         self.name = channel
@@ -22,6 +27,10 @@ class PolygonStampedMapSubscriber(Node):
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(buffer=self.tf_buffer, node=self)
+
+        self.api_url = api_url
+        self.api_route = "PolygonToCellMap"
+        self.map_resolution = { 'x': 32, 'y': 32, 'z': 32 }
 
     def getLocation(self,
                     target_frame: str = 'kevin',
@@ -41,13 +50,35 @@ class PolygonStampedMapSubscriber(Node):
 
     def _callback(self, data: PolygonStamped):
         print("Data received:", data)
-        return
-        myloc: Dict[str, float] = self.getLocation('kevin', 'leo02/map')
-        other: List[Dict[str, float]] = [
-            # generically get all positions?
-            # I.e. do no hard code individual robot's channels?
-            self.getLocation('leo02/base_link', 'leo02/map'),
-        ]
-        # TODO: forward information to API
-        # TODO: obtain results and so something with them?
-        pass
+        start = datetime.now()
+
+        inputdata = {
+            'vertices': [ { 'x': p.x, 'y': p.y, 'z': p.z } for p in data.polygon.points ],
+            'resolution': self.map_resolution,
+            'me': self.getLocation('kevin', 'leo02/map'),
+            'others': [
+                # generically get all positions?
+                # I.e. do no hard code individual robot's channels?
+                self.getLocation('leo02/base_link', 'leo02/map'),
+            ],
+        }
+        print("Retrieved positions & formulated input data ... ({})".format(datetime.now() - start))
+
+        r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
+        print("Made query ... ({})".format(datetime.now() - start))
+
+        if r.status_code != 200:
+            print("Error occurred:", r)
+            print(r.text)
+            return
+
+        jdata = json.loads(r.text)
+        print("Parsed JSON ({})".format(datetime.now() - start))
+
+        print("{} cells were returned.".format(len(jdata['cells'])))
+        print("Offset: {}".format(len(jdata['offset'])))
+        print("Resolution: {}".format(len(jdata['resolution'])))
+        first_few_cells = 10
+        print(f"First {first_few_cells} cells:")
+        for d in jdata['cells'][:first_few_cells]:
+            print(d)
