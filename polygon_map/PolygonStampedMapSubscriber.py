@@ -42,7 +42,8 @@ class PolygonStampedMapSubscriber(Node):
                 source_frame,
                 rclpy.time.Time()
             )
-            pos: Dict[str, float] = trans.transform.translation
+            vector3 = trans.transform.translation
+            pos: Dict[str, float] = { 'x': vector3.x, 'y': vector3.y, 'z': vector3.z }
             return pos
         except Exception as e:
             self.get_logger().error(f'Error getting relative position: {e}')
