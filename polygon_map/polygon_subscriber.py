@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import rclpy
-from rclpy.node import Node
-from turtlesim.msg import Pose
 
 from .PolygonStampedMapSubscriber import PolygonStampedMapSubscriber
 
