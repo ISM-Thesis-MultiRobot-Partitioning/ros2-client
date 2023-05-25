@@ -50,7 +50,7 @@ class PolygonStampedMapSubscriber(Node):
             raise e
 
     def _callback(self, data: PolygonStamped):
-        print("Data received:", data)
+        print("Data received.")
         start = datetime.now()
 
         inputdata = {
@@ -64,6 +64,7 @@ class PolygonStampedMapSubscriber(Node):
             ],
         }
         print("Retrieved positions & formulated input data ... ({})".format(datetime.now() - start))
+        print(f'inputdata: {inputdata}')
 
         r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
         print("Made query ... ({})".format(datetime.now() - start))
