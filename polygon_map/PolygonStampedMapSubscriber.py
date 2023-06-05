@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from typing import Dict
+from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
 import rclpy
 from rclpy.node import Node
@@ -13,20 +14,23 @@ import json
 
 
 class PolygonStampedMapSubscriber(Node):
-    def __init__(self, channel: str, api_url: str):
+    def __init__(self, input_channel: str, output_channel: str, api_url: str, api_route: str):
         super().__init__('polygon_stamped_map_subscriber')
 
-        self.name = channel
-        self.channel = channel
+        self.name = input_channel
+        self.input_channel = input_channel
+        self.output_channel = output_channel
+
         self.sub = self.create_subscription(
-            PolygonStamped, self.channel, self._callback, 10
+            PolygonStamped, self.input_channel, self._callback, 10
         )
+        self.pub = PolygonStampedMapPublisher(self.output_channel)
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(buffer=self.tf_buffer, node=self)
 
         self.api_url = api_url
-        self.api_route = 'PolygonToCellMap'
+        self.api_route = api_route
         self.map_resolution = {'x': 32, 'y': 32, 'z': 32}
 
     def getLocation(
@@ -84,7 +88,10 @@ class PolygonStampedMapSubscriber(Node):
         print('{} cells were returned.'.format(len(jdata['cells'])))
         print('Offset: {}'.format(len(jdata['offset'])))
         print('Resolution: {}'.format(len(jdata['resolution'])))
+
         first_few_cells = 10
         print(f'First {first_few_cells} cells:')
         for d in jdata['cells'][:first_few_cells]:
             print(d)
+
+        self.pub.publish(jdata['cells'])

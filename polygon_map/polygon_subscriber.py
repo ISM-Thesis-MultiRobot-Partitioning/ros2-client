@@ -16,7 +16,12 @@ if not API_URL:
 def main(args=None):
     rclpy.init(args=args)
 
-    sub = PolygonStampedMapSubscriber('/exploration_zone', API_URL)
+    sub = PolygonStampedMapSubscriber(
+        '/exploration_zone',
+        '/assigned_border',
+        API_URL,
+        'PolygonToCellMapContours',
+    )
     rclpy.spin(sub)
 
     # destroy the node when it is not used anymore
