@@ -14,7 +14,13 @@ import json
 
 
 class PolygonStampedMapSubscriber(Node):
-    def __init__(self, input_channel: str, output_channel: str, api_url: str, api_route: str):
+    def __init__(
+        self,
+        input_channel: str,
+        output_channel: str,
+        api_url: str,
+        api_route: str,
+    ):
         super().__init__('polygon_stamped_map_subscriber')
 
         self.name = input_channel
