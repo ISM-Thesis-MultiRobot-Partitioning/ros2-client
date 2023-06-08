@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from typing import Dict
+from typing import Dict, Optional
 from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PolygonStamped
+from nav_msgs.msg import Odometry
 from tf2_ros import Buffer, TransformListener
 
 import requests
@@ -57,6 +58,9 @@ class PolygonStampedMapSubscriber(Node):
             self.get_logger().error(f'Error getting relative position: {e}')
             raise e
 
+    def getOdomLocation(self, odom_topic: str) -> Dict[str, float]:
+        return OdomSubscriber(odom_topic).getOneLocation()
+
     def _callback(self, data: PolygonStamped):
         print('Data received.')
         start = datetime.now()
@@ -66,11 +70,12 @@ class PolygonStampedMapSubscriber(Node):
                 {'x': p.x, 'y': p.y, 'z': p.z} for p in data.polygon.points
             ],
             'resolution': self.map_resolution,
-            'me': self.getLocation('kevin', 'leo02/map'),
+            'me': self.getOdomLocation('/tb3_1/odom'),
             'others': [
                 # generically get all positions?
                 # I.e. do no hard code individual robot's channels?
-                self.getLocation('leo02/base_link', 'leo02/map'),
+                self.getOdomLocation('/tb3_0/odom'),
+                self.getOdomLocation('/tb3_2/odom'),
             ],
         }
         print(
@@ -101,3 +106,35 @@ class PolygonStampedMapSubscriber(Node):
             print(d)
 
         self.pub.publish(jdata['cells'])
+
+
+class OdomSubscriber(Node):
+    def __init__(self, input_channel: str):
+        super().__init__(
+            'odom_{}_subscriber'.format(input_channel.replace('/', '_'))
+        )
+
+        self.channel = input_channel
+
+        self.sub = self.create_subscription(Odometry, self.channel, self.callback, 10)
+        self.value: Optional[Dict[str, float]] = None
+
+    def getOneLocation(self) -> Dict[str, float]:
+        self.get_logger().info(f'Get odom location {self.channel}')
+        while rclpy.ok() and not self.value:
+            self.get_logger().info(f'Waiting for message (?). Value: {self.value}')
+            rclpy.spin_once(self)
+        value: Dict[str, float] = self.value
+        self.value = None
+        if value:
+            return value
+        else:
+            self.get_logger().error('Failed to receive position.')
+
+    def callback(self, msg: Odometry):
+        self.get_logger().info(f'Received odom message: {msg}')
+        self.value = {
+            'x': msg.pose.pose.position.x,
+            'y': msg.pose.pose.position.y,
+            'z': msg.pose.pose.position.z,
+        }
