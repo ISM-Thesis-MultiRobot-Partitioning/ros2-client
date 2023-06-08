@@ -16,6 +16,7 @@ class PolygonStampedMapPublisher(Node):
 
     def publish(self, points: List[Tuple[Dict[str, float], str]]):
         polygon_msg = PolygonStamped()
+        polygon_msg.header.frame_id = 'world'
         polygon_msg.polygon = Polygon(
             **{'points': [Point32(**p[0]) for p in points]}
         )
