@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from typing import Dict, Optional
+from typing import Dict
+from polygon_map.OdomSubscriber import OdomSubscriber
 from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PolygonStamped
-from nav_msgs.msg import Odometry
 from tf2_ros import Buffer, TransformListener
 
 import requests
@@ -106,35 +106,3 @@ class PolygonStampedMapSubscriber(Node):
             print(d)
 
         self.pub.publish(jdata['cells'])
-
-
-class OdomSubscriber(Node):
-    def __init__(self, input_channel: str):
-        super().__init__(
-            'odom_{}_subscriber'.format(input_channel.replace('/', '_'))
-        )
-
-        self.channel = input_channel
-
-        self.sub = self.create_subscription(Odometry, self.channel, self.callback, 10)
-        self.value: Optional[Dict[str, float]] = None
-
-    def getOneLocation(self) -> Dict[str, float]:
-        self.get_logger().info(f'Get odom location {self.channel}')
-        while rclpy.ok() and not self.value:
-            self.get_logger().info(f'Waiting for message (?). Value: {self.value}')
-            rclpy.spin_once(self)
-        value: Dict[str, float] = self.value
-        self.value = None
-        if value:
-            return value
-        else:
-            self.get_logger().error('Failed to receive position.')
-
-    def callback(self, msg: Odometry):
-        self.get_logger().info(f'Received odom message: {msg}')
-        self.value = {
-            'x': msg.pose.pose.position.x,
-            'y': msg.pose.pose.position.y,
-            'z': msg.pose.pose.position.z,
-        }
