@@ -83,7 +83,6 @@ class PolygonStampedMapSubscriber(Node):
                 datetime.now() - start
             )
         )
-        print(f'inputdata: {inputdata}')
 
         r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
         print('Made query ... ({})'.format(datetime.now() - start))

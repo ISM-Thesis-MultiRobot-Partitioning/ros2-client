@@ -23,9 +23,6 @@ class OdomSubscriber(Node):
     def getOneLocation(self) -> Dict[str, float]:
         self.get_logger().info(f'Get odom location {self.channel}')
         while rclpy.ok() and not self.value:
-            self.get_logger().info(
-                f'Waiting for message (?). Value: {self.value}'
-            )
             rclpy.spin_once(self)
         value: Dict[str, float] = self.value
         self.value = None
@@ -36,7 +33,6 @@ class OdomSubscriber(Node):
             return {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
     def callback(self, msg: Odometry):
-        self.get_logger().info(f'Received odom message: {msg}')
         self.value = {
             'x': msg.pose.pose.position.x,
             'y': msg.pose.pose.position.y,
