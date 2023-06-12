@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from polygon_map.OneTimeSubscriber import OneTimeSubscriber
 from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
@@ -23,6 +23,8 @@ class PolygonStampedMapSubscriber(Node):
         output_channel: str,
         api_url: str,
         api_route: str,
+        my_odom_topic: str,
+        other_odom_topics: List[str],
     ):
         super().__init__('polygon_stamped_map_subscriber')
 
@@ -42,6 +44,9 @@ class PolygonStampedMapSubscriber(Node):
         self.api_route = api_route
         self.map_resolution = {'x': 32, 'y': 32, 'z': 32}
 
+        self.my_odom_topic: str = my_odom_topic
+        self.other_odom_topics: List[str] = other_odom_topics
+
     def getLocation(
         self, target_frame: str = 'kevin', source_frame: str = 'leo02/map'
     ) -> Dict[str, float]:
@@ -60,7 +65,7 @@ class PolygonStampedMapSubscriber(Node):
             self.get_logger().error(f'Error getting relative position: {e}')
             raise e
 
-    def getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
+    def _getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
         if position := OneTimeSubscriber(odom_topic, Odometry).getOnce():
             return {
                 'x': position.pose.pose.position.x,
@@ -69,6 +74,14 @@ class PolygonStampedMapSubscriber(Node):
             }
         else:
             return None
+
+    def getMyOdomLocation(self) -> Optional[Dict[str, float]]:
+        return self._getOdomLocation(self.my_odom_topic)
+
+    def getOtherOdomLocations(self) -> List[Optional[Dict[str, float]]]:
+        return [
+            self._getOdomLocation(topic) for topic in self.other_odom_topics
+        ]
 
     def _callback(self, data: PolygonStamped):
         print('Data received.')
@@ -79,13 +92,8 @@ class PolygonStampedMapSubscriber(Node):
                 {'x': p.x, 'y': p.y, 'z': p.z} for p in data.polygon.points
             ],
             'resolution': self.map_resolution,
-            'me': self.getOdomLocation('/tb3_1/odom'),
-            'others': [
-                # generically get all positions?
-                # I.e. do no hard code individual robot's channels?
-                self.getOdomLocation('/tb3_0/odom'),
-                self.getOdomLocation('/tb3_2/odom'),
-            ],
+            'me': self.getMyOdomLocation(),
+            'others': self.getOtherOdomLocations(),
         }
         print(
             'Retrieved positions & formulated input data ... ({})'.format(

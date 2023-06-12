@@ -21,6 +21,13 @@ def main(args=None):
         output_channel='/assigned_border',
         api_url=API_URL,
         api_route='PolygonToCellMapContours',
+        my_odom_topic='/tb3_1/odom',
+        other_odom_topics=[
+            # generically get all positions?
+            # I.e. do no hard code individual robot's channels?
+            '/tb3_0/odom',
+            '/tb3_2/odom',
+        ],
     )
     rclpy.spin(sub)
 
