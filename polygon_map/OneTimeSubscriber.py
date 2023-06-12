@@ -26,7 +26,12 @@ class OneTimeSubscriber(Node):
         self.get_logger().info(f'Get odom location {self.channel}')
 
         start = datetime.now()
-        while rclpy.ok() and not self.value and (datetime.now() - start).total_seconds() < self.timeout:
+        while rclpy.ok() and not self.value:
+            if (datetime.now() - start).total_seconds() > self.timeout:
+                self.get_logger().error(
+                    f'Timeout while retrieving topic message ({self.timeout} seconds)'
+                )
+                break
             rclpy.spin_once(self)
         self.destroy_node()
 
