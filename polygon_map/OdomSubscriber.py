@@ -24,6 +24,7 @@ class OdomSubscriber(Node):
         self.get_logger().info(f'Get odom location {self.channel}')
         while rclpy.ok() and not self.value:
             rclpy.spin_once(self)
+        self.destroy_node()
         value: Dict[str, float] = self.value
         self.value = None
         if value:
