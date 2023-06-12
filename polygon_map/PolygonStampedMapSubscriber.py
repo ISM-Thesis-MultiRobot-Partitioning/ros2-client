@@ -99,9 +99,15 @@ class PolygonStampedMapSubscriber(Node):
         )
 
         try:
-            r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
+            r = requests.post(
+                f'{self.api_url}/{self.api_route}', json=inputdata
+            )
         except ConnectionError as e:
-            self.get_logger().error(f"A connection error occurred. Could not reach the partitioning API: {self.api_url}.\n{e}")
+            self.get_logger().error(
+                'A connection error occurred. Could not reach the partitioning API: {}.\n{}'.format(
+                    self.api_url, e
+                )
+            )
             return
         print('Made query ... ({})'.format(datetime.now() - start))
 
