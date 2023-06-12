@@ -15,7 +15,7 @@ class OneTimeSubscriber(Node):
         )
 
         self.channel = input_channel
-        self.timeout = 10  # seconds
+        self.timeout = 3  # seconds
 
         self.sub = self.create_subscription(
             message_type, self.channel, self.callback, 10
