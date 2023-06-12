@@ -17,10 +17,10 @@ def main(args=None):
     rclpy.init(args=args)
 
     sub = PolygonStampedMapSubscriber(
-        '/exploration_zone',
-        '/assigned_border',
-        API_URL,
-        'PolygonToCellMapContours',
+        input_channel='/exploration_zone',
+        output_channel='/assigned_border',
+        api_url=API_URL,
+        api_route='PolygonToCellMapContours',
     )
     rclpy.spin(sub)
 
