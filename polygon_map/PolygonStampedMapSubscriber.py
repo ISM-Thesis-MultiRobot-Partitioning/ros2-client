@@ -8,7 +8,6 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PolygonStamped
 from nav_msgs.msg import Odometry
-from tf2_ros import Buffer, TransformListener
 
 import requests
 from requests.exceptions import ConnectionError
@@ -37,33 +36,12 @@ class PolygonStampedMapSubscriber(Node):
         )
         self.pub = PolygonStampedMapPublisher(self.output_channel)
 
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(buffer=self.tf_buffer, node=self)
-
         self.api_url = api_url
         self.api_route = api_route
         self.map_resolution = {'x': 32, 'y': 32, 'z': 32}
 
         self.my_odom_topic: str = my_odom_topic
         self.other_odom_topics: List[str] = other_odom_topics
-
-    def getLocation(
-        self, target_frame: str = 'kevin', source_frame: str = 'leo02/map'
-    ) -> Dict[str, float]:
-        try:
-            trans = self.tf_buffer.lookup_transform(
-                target_frame, source_frame, rclpy.time.Time()
-            )
-            vector3 = trans.transform.translation
-            pos: Dict[str, float] = {
-                'x': vector3.x,
-                'y': vector3.y,
-                'z': vector3.z,
-            }
-            return pos
-        except Exception as e:
-            self.get_logger().error(f'Error getting relative position: {e}')
-            raise e
 
     def _getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
         if position := OneTimeSubscriber(odom_topic, Odometry).getOnce():
