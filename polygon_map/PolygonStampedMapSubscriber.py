@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Dict
+from typing import Dict, Optional
 from polygon_map.OneTimeSubscriber import OneTimeSubscriber
 from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
@@ -60,20 +60,15 @@ class PolygonStampedMapSubscriber(Node):
             self.get_logger().error(f'Error getting relative position: {e}')
             raise e
 
-    def getOdomLocation(self, odom_topic: str) -> Dict[str, float]:
-        position = OneTimeSubscriber(odom_topic, Odometry).getOnce()
-        if position:
+    def getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
+        if position := OneTimeSubscriber(odom_topic, Odometry).getOnce():
             return {
                 'x': position.pose.pose.position.x,
                 'y': position.pose.pose.position.y,
                 'z': position.pose.pose.position.z,
             }
         else:
-            return {
-                'x': 0.0,
-                'y': 0.0,
-                'z': 0.0,
-            }
+            return None
 
     def _callback(self, data: PolygonStamped):
         print('Data received.')
@@ -97,6 +92,12 @@ class PolygonStampedMapSubscriber(Node):
                 datetime.now() - start
             )
         )
+
+        if not (inputdata['me'] and all(inputdata['others'])):
+            self.get_logger().error(
+                'One or more topics failed to retrieve odometry information. Aborting.'
+            )
+            return
 
         try:
             r = requests.post(
