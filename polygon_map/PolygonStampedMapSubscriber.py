@@ -10,6 +10,7 @@ from geometry_msgs.msg import PolygonStamped
 from tf2_ros import Buffer, TransformListener
 
 import requests
+from requests.exceptions import ConnectionError
 from datetime import datetime
 import json
 
@@ -84,7 +85,11 @@ class PolygonStampedMapSubscriber(Node):
             )
         )
 
-        r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
+        try:
+            r = requests.post(f'{self.api_url}/{self.api_route}', json=inputdata)
+        except ConnectionError as e:
+            self.get_logger().error(f"A connection error occurred. Could not reach the partitioning API: {self.api_url}.\n{e}")
+            return
         print('Made query ... ({})'.format(datetime.now() - start))
 
         if r.status_code != 200:
