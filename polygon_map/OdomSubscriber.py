@@ -6,6 +6,8 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 
+from datetime import datetime
+
 
 class OdomSubscriber(Node):
     def __init__(self, input_channel: str):
@@ -14,6 +16,7 @@ class OdomSubscriber(Node):
         )
 
         self.channel = input_channel
+        self.timeout = 10  # seconds
 
         self.sub = self.create_subscription(
             Odometry, self.channel, self.callback, 10
@@ -22,7 +25,8 @@ class OdomSubscriber(Node):
 
     def getOneLocation(self) -> Dict[str, float]:
         self.get_logger().info(f'Get odom location {self.channel}')
-        while rclpy.ok() and not self.value:
+        start = datetime.now()
+        while rclpy.ok() and not self.value and (datetime.now() - start).total_seconds() < self.timeout:
             rclpy.spin_once(self)
         self.destroy_node()
         value: Dict[str, float] = self.value
