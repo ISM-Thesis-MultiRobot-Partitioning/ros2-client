@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 from typing import Dict
-from polygon_map.OdomSubscriber import OdomSubscriber
+from polygon_map.OneTimeSubscriber import OneTimeSubscriber
 from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PolygonStamped
+from nav_msgs.msg import Odometry
 from tf2_ros import Buffer, TransformListener
 
 import requests
@@ -60,7 +61,19 @@ class PolygonStampedMapSubscriber(Node):
             raise e
 
     def getOdomLocation(self, odom_topic: str) -> Dict[str, float]:
-        return OdomSubscriber(odom_topic).getOneLocation()
+        position = OneTimeSubscriber(odom_topic, Odometry).getOnce()
+        if position:
+            return {
+                'x': position.pose.pose.position.x,
+                'y': position.pose.pose.position.y,
+                'z': position.pose.pose.position.z,
+            }
+        else:
+            return {
+                'x': 0.0,
+                'y': 0.0,
+                'z': 0.0,
+            }
 
     def _callback(self, data: PolygonStamped):
         print('Data received.')
