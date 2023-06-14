@@ -12,6 +12,22 @@ if not API_URL:
     print('Exiting.')
     exit(1)
 
+MY_ODOM_TOPIC = os.environ.get('MY_ODOM_TOPIC')
+if not MY_ODOM_TOPIC:
+    print('MY_ODOM_TOPIC environment variable not set.')
+    print('Cannot retrieve robot location as a result.')
+    print('Exiting.')
+    exit(2)
+
+OTHER_ODOM_TOPICS = os.environ.get('OTHER_ODOM_TOPICS')
+if not OTHER_ODOM_TOPICS:
+    print('OTHER_ODOM_TOPICS environment variable not set.')
+    print('Cannot retrieve robot location as a result.')
+    print('Exiting.')
+    exit(3)
+else:
+    OTHER_ODOM_TOPICS = OTHER_ODOM_TOPICS.split()
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -21,13 +37,8 @@ def main(args=None):
         output_channel='/assigned_border',
         api_url=API_URL,
         api_route='PolygonToCellMapContours',
-        my_odom_topic='/tb3_0/odom',
-        other_odom_topics=[
-            # generically get all positions?
-            # I.e. do no hard code individual robot's channels?
-            '/tb3_1/odom',
-            '/tb3_2/odom',
-        ],
+        my_odom_topic=MY_ODOM_TOPIC,
+        other_odom_topics=OTHER_ODOM_TOPICS,
     )
     rclpy.spin(sub)
 
