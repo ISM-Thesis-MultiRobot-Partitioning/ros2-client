@@ -25,7 +25,8 @@ class PolygonStampedMapSubscriber(Node):
         my_odom_topic: str,
         other_odom_topics: List[str],
     ):
-        super().__init__('polygon_stamped_map_subscriber')
+        node_name_discriminator = my_odom_topic.replace('/', '_')
+        super().__init__(f'polygon_stamped_map_subscriber_{node_name_discriminator}')
 
         self.name = input_channel
         self.input_channel = input_channel
@@ -34,7 +35,7 @@ class PolygonStampedMapSubscriber(Node):
         self.sub = self.create_subscription(
             PolygonStamped, self.input_channel, self._callback, 10
         )
-        self.pub = PolygonStampedMapPublisher(self.output_channel)
+        self.pub = PolygonStampedMapPublisher(self.output_channel, node_name_discriminator)
 
         self.api_url = api_url
         self.api_route = api_route

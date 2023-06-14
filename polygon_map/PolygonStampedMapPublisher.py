@@ -7,8 +7,8 @@ from geometry_msgs.msg import PolygonStamped, Polygon, Point32
 
 
 class PolygonStampedMapPublisher(Node):
-    def __init__(self, channel: str):
-        super().__init__('polygon_stamped_map_publisher')
+    def __init__(self, channel: str, node_name_discriminator: str):
+        super().__init__(f'polygon_stamped_map_publisher_{node_name_discriminator}')
 
         self.name = channel
         self.channel = channel
