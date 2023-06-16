@@ -9,6 +9,7 @@ API_URL = os.environ.get('PARTITION_API_URL')
 MY_ODOM_TOPIC = os.environ.get('MY_ODOM_TOPIC')
 OTHER_ODOM_TOPICS = os.environ.get('OTHER_ODOM_TOPICS')
 OUTPUT_CHANNEL = os.environ.get('OUTPUT_CHANNEL', '/assigned_border')
+INPUT_CHANNEL = os.environ.get('INPUT_CHANNEL', '/exploration_zone')
 
 if not API_URL:
     print('PARTITION_API_URL environment variable not set.')
@@ -36,7 +37,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     sub = PolygonStampedMapSubscriber(
-        input_channel='/exploration_zone',
+        input_channel=INPUT_CHANNEL,
         output_channel=OUTPUT_CHANNEL,
         api_url=API_URL,
         api_route='PolygonToCellMapContours',
