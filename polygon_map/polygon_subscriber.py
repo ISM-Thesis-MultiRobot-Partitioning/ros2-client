@@ -6,6 +6,7 @@ import os
 from .PolygonStampedMapSubscriber import PolygonStampedMapSubscriber
 
 API_URL = os.environ.get('PARTITION_API_URL')
+API_ROUTE = os.environ.get('PARTITION_API_ROUTE', 'PolygonToCellMapContours')
 MY_ODOM_TOPIC = os.environ.get('MY_ODOM_TOPIC')
 OTHER_ODOM_TOPICS = os.environ.get('OTHER_ODOM_TOPICS')
 OUTPUT_CHANNEL = os.environ.get('OUTPUT_CHANNEL', '/assigned_border')
@@ -40,7 +41,7 @@ def main(args=None):
         input_channel=INPUT_CHANNEL,
         output_channel=OUTPUT_CHANNEL,
         api_url=API_URL,
-        api_route='PolygonToCellMapContours',
+        api_route=API_ROUTE,
         my_odom_topic=MY_ODOM_TOPIC,
         other_odom_topics=OTHER_ODOM_TOPICS,
     )
