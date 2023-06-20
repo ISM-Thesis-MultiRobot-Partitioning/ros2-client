@@ -116,4 +116,8 @@ class PolygonStampedMapSubscriber(Node):
         for d in jdata['cells'][:first_few_cells]:
             print(d)
 
+        u = []
+        [u.append(e) for e in jdata['cells'] if e not in u]
+        print(f'Len: {len(jdata["cells"])}, Uniq: {len(u)}')
+
         self.pub.publish(jdata['cells'])
