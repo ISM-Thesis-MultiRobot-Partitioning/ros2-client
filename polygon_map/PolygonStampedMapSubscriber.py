@@ -100,8 +100,7 @@ class PolygonStampedMapSubscriber(Node):
         print('Made query ... ({})'.format(datetime.now() - start))
 
         if r.status_code != 200:
-            print('Error occurred:', r)
-            print(r.text)
+            self.get_logger().error(f'Error occurred: {r}\n{r.text}')
             return
 
         jdata = json.loads(r.text)
