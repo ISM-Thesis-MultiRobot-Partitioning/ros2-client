@@ -27,6 +27,8 @@ class PolygonStampedMapSubscriber(Node):
         node_name_discriminator = my_odom_topic.replace('/', '_')
         super().__init__(f'polygon_stamped_map_subscriber_{node_name_discriminator}')
 
+        self.get_logger().info('Creating Polygon map subscriber ...')
+
         self.name = input_channel
         self.input_channel = input_channel
         self.output_channel = output_channel
@@ -42,6 +44,7 @@ class PolygonStampedMapSubscriber(Node):
 
         self.my_odom_topic: str = my_odom_topic
         self.other_odom_topics: List[str] = other_odom_topics
+        self.get_logger().info('Done creating Polygon map subscriber.')
 
     def _getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
         if position := OneTimeSubscriber(odom_topic, PoseStamped).getOnce():
@@ -62,7 +65,7 @@ class PolygonStampedMapSubscriber(Node):
         ]
 
     def _callback(self, data: PolygonStamped):
-        print('Data received.')
+        self.get_logger().info('Data received.')
         start = datetime.now()
 
         inputdata = {
@@ -73,7 +76,7 @@ class PolygonStampedMapSubscriber(Node):
             'me': self.getMyOdomLocation(),
             'others': self.getOtherOdomLocations(),
         }
-        print(
+        self.get_logger().info(
             'Retrieved positions & formulated input data ... ({})'.format(
                 datetime.now() - start
             )
@@ -96,26 +99,26 @@ class PolygonStampedMapSubscriber(Node):
                 )
             )
             return
-        print('Made query ... ({})'.format(datetime.now() - start))
+        self.get_logger().info('Made query ... ({})'.format(datetime.now() - start))
 
         if r.status_code != 200:
             self.get_logger().error(f'Error occurred: {r}\n{r.text}')
             return
 
         jdata = json.loads(r.text)
-        print('Parsed JSON ({})'.format(datetime.now() - start))
+        self.get_logger().info('Parsed JSON ({})'.format(datetime.now() - start))
 
-        print('{} cells were returned.'.format(len(jdata['cells'])))
-        print('Offset: {}'.format(len(jdata['offset'])))
-        print('Resolution: {}'.format(len(jdata['resolution'])))
+        self.get_logger().info('{} cells were returned.'.format(len(jdata['cells'])))
+        self.get_logger().info('Offset: {}'.format(len(jdata['offset'])))
+        self.get_logger().info('Resolution: {}'.format(len(jdata['resolution'])))
 
         first_few_cells = 10
-        print(f'First {first_few_cells} cells:')
+        self.get_logger().info(f'First {first_few_cells} cells:')
         for d in jdata['cells'][:first_few_cells]:
-            print(d)
+            self.get_logger().info(d)
 
         u = []
         [u.append(e) for e in jdata['cells'] if e not in u]
-        print(f'Len: {len(jdata["cells"])}, Uniq: {len(u)}')
+        self.get_logger().info(f'Len: {len(jdata["cells"])}, Uniq: {len(u)}')
 
         self.pub.publish(jdata['cells'])
