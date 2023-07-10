@@ -25,7 +25,9 @@ class PolygonStampedMapSubscriber(Node):
         other_odom_topics: List[str],
     ):
         node_name_discriminator = my_odom_topic.replace('/', '_')
-        super().__init__(f'polygon_stamped_map_subscriber_{node_name_discriminator}')
+        super().__init__(
+            f'polygon_stamped_map_subscriber_{node_name_discriminator}'
+        )
 
         self.get_logger().info('Creating Polygon map subscriber ...')
 
@@ -36,7 +38,9 @@ class PolygonStampedMapSubscriber(Node):
         self.sub = self.create_subscription(
             PolygonStamped, self.input_channel, self._callback, 10
         )
-        self.pub = PolygonStampedMapPublisher(self.output_channel, node_name_discriminator)
+        self.pub = PolygonStampedMapPublisher(
+            self.output_channel, node_name_discriminator
+        )
 
         self.api_url = api_url
         self.api_route = api_route
@@ -59,9 +63,12 @@ class PolygonStampedMapSubscriber(Node):
     def getMyOdomLocation(self) -> Optional[Dict[str, float]]:
         return self._getOdomLocation(self.my_odom_topic)
 
-    def getOtherOdomLocations(self) -> List[Optional[Dict[str, float]]]:
+    def getOtherOdomLocations(
+        self,
+    ) -> List[Dict[str, Optional[Dict[str, float]]]]:
         return [
-            self._getOdomLocation(topic) for topic in self.other_odom_topics
+            {'position': self._getOdomLocation(topic)}
+            for topic in self.other_odom_topics
         ]
 
     def _callback(self, data: PolygonStamped):
@@ -73,7 +80,7 @@ class PolygonStampedMapSubscriber(Node):
                 {'x': p.x, 'y': p.y, 'z': p.z} for p in data.polygon.points
             ],
             'resolution': self.map_resolution,
-            'me': self.getMyOdomLocation(),
+            'me': {'position': self.getMyOdomLocation()},
             'others': self.getOtherOdomLocations(),
         }
         self.get_logger().info(
@@ -99,18 +106,26 @@ class PolygonStampedMapSubscriber(Node):
                 )
             )
             return
-        self.get_logger().info('Made query ... ({})'.format(datetime.now() - start))
+        self.get_logger().info(
+            'Made query ... ({})'.format(datetime.now() - start)
+        )
 
         if r.status_code != 200:
             self.get_logger().error(f'Error occurred: {r}\n{r.text}')
             return
 
         jdata = json.loads(r.text)
-        self.get_logger().info('Parsed JSON ({})'.format(datetime.now() - start))
+        self.get_logger().info(
+            'Parsed JSON ({})'.format(datetime.now() - start)
+        )
 
-        self.get_logger().info('{} cells were returned.'.format(len(jdata['cells'])))
+        self.get_logger().info(
+            '{} cells were returned.'.format(len(jdata['cells']))
+        )
         self.get_logger().info('Offset: {}'.format(len(jdata['offset'])))
-        self.get_logger().info('Resolution: {}'.format(len(jdata['resolution'])))
+        self.get_logger().info(
+            'Resolution: {}'.format(len(jdata['resolution']))
+        )
 
         first_few_cells = 10
         self.get_logger().info(f'First {first_few_cells} cells:')
