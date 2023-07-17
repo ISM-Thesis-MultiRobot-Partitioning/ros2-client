@@ -122,15 +122,15 @@ class PolygonStampedMapSubscriber(Node):
         self.get_logger().info(
             '{} cells were returned.'.format(len(jdata['cells']))
         )
-        self.get_logger().info('Offset: {}'.format(len(jdata['offset'])))
+        self.get_logger().info('Offset: {}'.format(jdata['offset']))
         self.get_logger().info(
-            'Resolution: {}'.format(len(jdata['resolution']))
+            'Resolution: {}'.format(jdata['resolution'])
         )
 
         first_few_cells = 10
         self.get_logger().info(f'First {first_few_cells} cells:')
         for d in jdata['cells'][:first_few_cells]:
-            self.get_logger().info(d)
+            self.get_logger().info(f'{d}')
 
         u = []
         [u.append(e) for e in jdata['cells'] if e not in u]
