@@ -6,8 +6,7 @@ from polygon_map.PolygonStampedMapPublisher import PolygonStampedMapPublisher
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PolygonStamped
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PolygonStamped, PoseStamped
 
 import requests
 from requests.exceptions import ConnectionError
@@ -45,11 +44,11 @@ class PolygonStampedMapSubscriber(Node):
         self.other_odom_topics: List[str] = other_odom_topics
 
     def _getOdomLocation(self, odom_topic: str) -> Optional[Dict[str, float]]:
-        if position := OneTimeSubscriber(odom_topic, Odometry).getOnce():
+        if position := OneTimeSubscriber(odom_topic, PoseStamped).getOnce():
             return {
-                'x': position.pose.pose.position.x,
-                'y': position.pose.pose.position.y,
-                'z': position.pose.pose.position.z,
+                'x': position.pose.position.x,
+                'y': position.pose.position.y,
+                'z': position.pose.position.z,
             }
         else:
             return None
